@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_api_request_log_system,api.request.log: system,model_api_request_log,base.group_system,1,0,0,0
+access_api_idempotency_system,api.idempotency: system,model_api_idempotency,base.group_system,1,0,0,0
+access_api_webhook_queue_system,api.webhook.queue: system,model_api_webhook_queue,base.group_system,1,0,0,0
