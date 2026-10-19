@@ -1,0 +1,220 @@
+openapi: 3.0.3
+info:
+  title: Shop Integration API
+  description: >
+    API REST de Odoo 18 para la integracion de la tienda en linea:
+    consulta de catalogo con stock, creacion de pedidos de venta y
+    notificaciones (webhooks) al validar entregas.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8070
+    description: Instancia local de desarrollo
+tags:
+  - name: products
+    description: Catalogo de productos (Tramo A / C)
+  - name: orders
+    description: Creacion de pedidos (Tramo B / C)
+
+paths:
+  /api/v1/products:
+    get:
+      tags: [products]
+      summary: Listar productos vendibles con stock
+      description: >
+        Requiere sesion de Odoo (autenticacion `user`): iniciar sesion en el
+        browser o usar la cookie de sesion. Solo devuelve productos activos y
+        vendibles (`sale_ok`).
+      parameters:
+        - name: category_id
+          in: query
+          schema: { type: integer }
+          description: Filtra por categoria de producto.
+        - name: only_stock
+          in: query
+          schema: { type: string, enum: ["true", "1", "yes", "false"] }
+          description: Si es verdadero, solo productos con cantidad disponible > 0.
+        - name: modified_since
+          in: query
+          schema: { type: string, format: date-time }
+          description: >
+            Solo productos modificados desde esa fecha. Acepta ISO-8601 completo
+            (`YYYY-MM-DDTHH:MM:SS`) o solo fecha (`YYYY-MM-DD`).
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Catalogo paginado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductPage" }
+        "422":
+          description: >
+            Filtro invalido (INVALID_FILTER, INVALID_DATE_FORMAT,
+            INVALID_PAGINATION).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/orders:
+    post:
+      tags: [orders]
+      summary: Crear (o recuperar) un pedido de venta
+      description: >
+        Autenticacion por API key nativa de Odoo: `Authorization: Bearer <key>`
+        (Preferencias > Seguridad > Claves de API, scope RPC). Con la cabecera
+        opcional `Idempotency-Key`, los reintentos con la misma clave y el mismo
+        cuerpo devuelven el mismo pedido; con otro cuerpo se responde 409.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema: { type: string }
+          example: Bearer <api_key>
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string }
+          description: Clave unica por integracion para reintentos seguros.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OrderInput" }
+            example:
+              rif: J-12345678-0
+              external_reference: REF-2026-0001
+              lines:
+                - default_code: ABC-123
+                  quantity: 2
+      responses:
+        "201":
+          description: Pedido creado (o reproducido por idempotencia).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "401":
+          description: Sin clave, o clave invalida o expirada (UNAUTHORIZED).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: >
+            IDEMPOTENCY_CONFLICT: la clave ya se uso con un cuerpo de datos
+            distinto.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: >
+            Validacion (INVALID_JSON, MISSING_FIELD, PARTNER_NOT_FOUND,
+            INVALID_LINES, PRODUCT_NOT_FOUND, INVALID_QUANTITY). El campo
+            `field` indica la ruta exacta del dato con error, p. ej.
+            `lines[0].default_code`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500":
+          description: Error interno (INTERNAL_ERROR); queda registrado en la auditoria.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: API key de Odoo (res.users.apikeys), scope `rpc`.
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: PRODUCT_NOT_FOUND
+            message:
+              type: string
+              example: No existe un producto con el codigo ABC-123
+            field:
+              type: string
+              example: lines[0].default_code
+
+    Product:
+      type: object
+      required: [id, default_code, name, list_price, qty_available]
+      properties:
+        id: { type: integer }
+        default_code: { type: string, example: ABC-123 }
+        name: { type: string }
+        list_price: { type: number, format: float }
+        qty_available:
+          type: number
+          format: float
+          description: Cantidad disponible (stock fisico, `qty_available`).
+
+    ProductPage:
+      type: object
+      required: [total, page, limit, has_next, data]
+      properties:
+        total: { type: integer, description: Total de productos que cumplen el filtro. }
+        page: { type: integer }
+        limit: { type: integer, maximum: 100 }
+        has_next: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Product" }
+
+    OrderLine:
+      type: object
+      required: [default_code, quantity]
+      properties:
+        default_code:
+          type: string
+          description: Codigo interno del producto (`default_code`).
+        quantity:
+          type: number
+          format: float
+          minimum: 0.000001
+          description: Cantidad estrictamente positiva.
+
+    OrderInput:
+      type: object
+      required: [rif, lines]
+      properties:
+        rif:
+          type: string
+          description: RIF del cliente; se busca en `res.partner.vat`.
+          example: J-12345678-0
+        external_reference:
+          type: string
+          description: Referencia externa de la tienda (va a `client_order_ref`).
+          example: REF-2026-0001
+        lines:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/OrderLine" }
+
+    Order:
+      type: object
+      required: [id, name, state, amount_total]
+      properties:
+        id: { type: integer }
+        name: { type: string, example: S00001 }
+        state:
+          type: string
+          description: Estado tras la creacion; `sale` = confirmado.
+          example: sale
+        amount_total: { type: number, format: float }
+
+security:
+  - apiKey: []
