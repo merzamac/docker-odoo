@@ -70,7 +70,9 @@ class PaymentRequestPayWizard(models.TransientModel):
             "currency_id": dest_currency.id,
             "journal_id": self.journal_id.id,
             "date": self.payment_date,
-            "ref": _("Pago Solicitud %s - %s") % (req.name, req.concept),
+            # En Odoo 18 account.payment ya no tiene 'ref' (vive en account.move);
+            # 'memo' es su sucesor y alimenta la glosa del asiento vía _inverse_memo
+            "memo": _("Pago Solicitud %s - %s") % (req.name, req.concept),
         }
         payment = self.env["account.payment"].create(payment_vals)
         payment.action_post()
