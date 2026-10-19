@@ -64,3 +64,35 @@ class TestSaleCommission(TransactionCase):
         order = self._create_order(self.salesman)
         order.action_confirm()
         self.assertEqual(order.order_line.commission_percent, 10.0)
+
+    def test_salesman_can_confirm_own_order(self):
+        """T-200: el vendedor confirma su propio pedido sin ser gerente.
+
+        Sin la línea de ACL del CSV para group_sale_salesman, el search sobre
+        sale.commission.rule revienta con AccessError (la pantalla roja del ticket).
+        """
+        uncategorized_product = self.env["product.product"].create({
+            "name": "Producto sin regla",
+            "list_price": 100.0,
+            "taxes_id": [(5, 0, 0)],
+        })
+        order = self.env["sale.order"].with_user(self.salesman).create({
+            "partner_id": self.partner.id,
+            "user_id": self.salesman.id,
+            "order_line": [(0, 0, {"product_id": uncategorized_product.id, "product_uom_qty": 1})],
+        })
+        order.with_user(self.salesman).action_confirm()
+        self.assertEqual(order.state, "sale")
+        self.assertEqual(order.order_line.commission_percent, 5.0)
+
+    def test_commission_uses_order_salesman_not_session_user(self):
+        """T-200: al confirmar desde otro usuario (el gerente de la tarde),
+        la comisión es la del vendedor del pedido, no la del usuario de la sesión.
+
+        Sin la corrección devuelve self.env.user.commission_percent (5.0 del admin)
+        en lugar del 3.0 de other_salesman: el escenario de producción T-200.
+        """
+        order = self._create_order(self.other_salesman)
+        order.action_confirm()
+        self.assertEqual(order.order_line.commission_percent, 3.0)
+        self.assertAlmostEqual(order.order_line.commission_amount, 6.0)
