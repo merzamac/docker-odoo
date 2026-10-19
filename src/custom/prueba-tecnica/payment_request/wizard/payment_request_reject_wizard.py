@@ -1,3 +1,5 @@
+from markupsafe import Markup
+
 from odoo import _, fields, models
 from odoo.exceptions import UserError
 
@@ -18,6 +20,7 @@ class PaymentRequestRejectWizard(models.TransientModel):
         req.activity_feedback(["mail.mail_activity_data_todo"])
         req.write({"state": "rejected"})
         req.message_post(
-            body=_("<b>Solicitud Rechazada</b> por %s.<br/><b>Motivo:</b> %s") % (self.env.user.name, self.reject_reason)
+            # Markup: en Odoo 18 los cuerpos str se escapan y las etiquetas se verían como texto
+            body=Markup(_("<b>Solicitud Rechazada</b> por %s.<br/><b>Motivo:</b> %s")) % (self.env.user.name, self.reject_reason)
         )
         return {"type": "ir.actions.act_window_close"}

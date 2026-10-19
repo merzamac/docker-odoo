@@ -1,3 +1,5 @@
+from markupsafe import Markup
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -83,7 +85,8 @@ class PaymentRequestPayWizard(models.TransientModel):
             "payment_id": payment.id,
         })
         req.message_post(
-            body=_("Pago contable registrado exitosamente: <a href='#' data-oe-model='account.payment' data-oe-id='%s'>%s</a> por un monto de %s %s.") % (
+            # Markup: en Odoo 18 los cuerpos str se escapan y las etiquetas se verían como texto
+            body=Markup(_("Pago contable registrado exitosamente: <a href='#' data-oe-model='account.payment' data-oe-id='%s'>%s</a> por un monto de %s %s.")) % (
                 payment.id, payment.name, payment.amount, dest_currency.symbol
             )
         )
