@@ -1,0 +1,50 @@
+<odoo>
+    <!-- Odoo 18: las vistas de lista usan <list> (la etiqueta <tree> esta deprecada). -->
+    <record id="view_api_request_log_list" model="ir.ui.view">
+        <field name="name">api.request.log.list</field>
+        <field name="model">api.request.log</field>
+        <field name="arch" type="xml">
+            <list string="Logs de API" create="false" edit="false" delete="false">
+                <field name="create_date" string="Fecha y Hora"/>
+                <field name="endpoint"/>
+                <field name="user_id"/>
+                <field name="status_code" string="Codigo HTTP"/>
+                <field name="duration" string="Duracion (ms)"/>
+                <field name="ip_address"/>
+                <field name="error_message" string="Error"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_api_request_log_form" model="ir.ui.view">
+        <field name="name">api.request.log.form</field>
+        <field name="model">api.request.log</field>
+        <field name="arch" type="xml">
+            <form string="Log de API" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="create_date" string="Fecha y Hora"/>
+                            <field name="endpoint"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group>
+                            <field name="status_code" string="Codigo HTTP"/>
+                            <field name="duration" string="Duracion (ms)"/>
+                            <field name="ip_address"/>
+                        </group>
+                    </group>
+                    <group string="Detalle del Error" invisible="not error_message">
+                        <field name="error_message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_api_request_log" model="ir.actions.act_window">
+        <field name="name">Auditoria de API</field>
+        <field name="res_model">api.request.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

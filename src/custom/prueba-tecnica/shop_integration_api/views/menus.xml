@@ -1,0 +1,21 @@
+<odoo>
+    <menuitem id="menu_api_integration"
+              name="Integracion API"
+              parent="base.menu_administration"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_api_request_log"
+              name="Auditoria de API"
+              parent="menu_api_integration"
+              action="action_api_request_log"
+              sequence="10"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_api_webhook_queue"
+              name="Cola de Webhooks"
+              parent="menu_api_integration"
+              action="action_api_webhook_queue"
+              sequence="20"
+              groups="base.group_system"/>
+</odoo>

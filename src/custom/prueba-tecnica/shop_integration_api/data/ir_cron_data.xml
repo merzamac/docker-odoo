@@ -1,0 +1,12 @@
+<odoo>
+    <!-- Odoo 18: ir.cron ya no admite numbercall (se elimino de la version). -->
+    <record id="ir_cron_process_api_webhooks" model="ir.cron">
+        <field name="name">API Webhook: Procesar Cola de Envios</field>
+        <field name="model_id" ref="model_api_webhook_queue"/>
+        <field name="state">code</field>
+        <field name="code">model.process_webhook_queue()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

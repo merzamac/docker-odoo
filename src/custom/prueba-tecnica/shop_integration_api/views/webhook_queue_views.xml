@@ -1,0 +1,48 @@
+<odoo>
+    <record id="view_api_webhook_queue_list" model="ir.ui.view">
+        <field name="name">api.webhook.queue.list</field>
+        <field name="model">api.webhook.queue</field>
+        <field name="arch" type="xml">
+            <list string="Cola de Webhooks" create="false" edit="false" delete="false">
+                <field name="create_date" string="Fecha"/>
+                <field name="url"/>
+                <field name="state"/>
+                <field name="attempts"/>
+                <field name="last_error"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_api_webhook_queue_form" model="ir.ui.view">
+        <field name="name">api.webhook.queue.form</field>
+        <field name="model">api.webhook.queue</field>
+        <field name="arch" type="xml">
+            <form string="Webhook" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="create_date" string="Fecha"/>
+                            <field name="url"/>
+                            <field name="state"/>
+                        </group>
+                        <group>
+                            <field name="attempts"/>
+                        </group>
+                    </group>
+                    <group string="Ultimo Error" invisible="not last_error">
+                        <field name="last_error" nolabel="1"/>
+                    </group>
+                    <group string="Cuerpo">
+                        <field name="payload" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_api_webhook_queue" model="ir.actions.act_window">
+        <field name="name">Cola de Webhooks</field>
+        <field name="res_model">api.webhook.queue</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
