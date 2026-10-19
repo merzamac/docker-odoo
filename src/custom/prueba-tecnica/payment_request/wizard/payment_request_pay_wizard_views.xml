@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_request_pay_wizard_view_form" model="ir.ui.view">
+        <field name="name">payment.request.pay.wizard.form</field>
+        <field name="model">payment.request.pay.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Registrar Pago">
+                <group>
+                    <field name="request_id" invisible="1"/>
+                    <field name="company_id" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="journal_currency_id" invisible="1"/>
+                    <field name="amount" string="Monto Solicitado" readonly="1"/>
+                    <field name="journal_id"/>
+                    <field name="payment_date"/>
+                    <field name="amount_in_journal_currency" readonly="1" string="Total a Pagar en Moneda del Diario"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_payment" string="Pagar y Contabilizar" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

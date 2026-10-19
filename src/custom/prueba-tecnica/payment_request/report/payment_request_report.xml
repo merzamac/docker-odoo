@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_payment_request" model="ir.actions.report">
+        <field name="name">Solicitud de Pago</field>
+        <field name="model">payment.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">payment_request.report_payment_request_template</field>
+        <field name="report_file">payment_request.report_payment_request_template</field>
+        <field name="print_report_name">'Solicitud - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_payment_request"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_payment_request_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="row">
+                            <div class="col-8">
+                                <h2>Solicitud de Pago: <span t-esc="o.name"/></h2>
+                            </div>
+                            <div class="col-4 text-end">
+                                <span class="badge rounded-pill bg-primary" t-field="o.state"/>
+                            </div>
+                        </div>
+                        <div class="row mt-4 mb-4">
+                            <div class="col-6">
+                                <strong>Proveedor:</strong> <span t-esc="o.partner_id.name"/><br/>
+                                <strong>RIF / Documento:</strong> <span t-esc="o.partner_id.vat or 'N/A'"/><br/>
+                                <strong>Fecha de Solicitud:</strong> <span t-field="o.date"/><br/>
+                                <strong>Solicitante:</strong> <span t-esc="o.applicant_id.name"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Monto Solicitado:</strong> <span t-field="o.amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/><br/>
+                                <strong>Compañía:</strong> <span t-esc="o.company_id.name"/><br/>
+                                <strong>Aprobado Por:</strong> <span t-esc="o.approver_id.name or 'No aplica'"/><br/>
+                                <strong>Fecha de Aprobación:</strong> <span t-field="o.approval_date"/>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h5>Concepto:</h5>
+                                <p class="border p-2 bg-light" t-esc="o.concept"/>
+                            </div>
+                        </div>
+                        <div class="row mt-5 pt-5 text-center">
+                            <div class="col-4 border-top">
+                                <p>Solicitado Por<br/><strong t-esc="o.applicant_id.name"/></p>
+                            </div>
+                            <div class="col-4"></div>
+                            <div class="col-4 border-top">
+                                <p>Aprobado Por<br/><strong t-esc="o.approver_id.name or 'Pendiente'"/></p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

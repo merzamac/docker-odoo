@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_request_view_list" model="ir.ui.view">
+        <field name="name">payment.request.list</field>
+        <field name="model">payment.request</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'paid'" decoration-info="state == 'approved'"
+                  decoration-muted="state == 'draft'" decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="applicant_id"/>
+                <field name="amount" widget="monetary"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="payment_request_view_form" model="ir.ui.view">
+        <field name="name">payment.request.form</field>
+        <field name="model">payment.request</field>
+        <field name="arch" type="xml">
+            <form string="Solicitud de Pago">
+                <header>
+                    <button name="action_send" string="Enviar" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Aprobar" type="object" class="oe_highlight"
+                            invisible="state != 'sent'" groups="payment_request.group_payment_request_approver"/>
+                    <button name="action_open_pay_wizard" string="Pagar" type="object" class="oe_highlight"
+                            invisible="state != 'approved'" groups="payment_request.group_payment_request_treasury"/>
+                    <button name="action_open_reject_wizard" string="Rechazar" type="object"
+                            invisible="state not in ('draft', 'sent')" groups="payment_request.group_payment_request_approver"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,approved,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <field name="payment_id" invisible="True"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id" readonly="state != 'draft'"/>
+                            <field name="amount" readonly="state != 'draft'"/>
+                            <field name="currency_id" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="applicant_id" readonly="1"/>
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="assigned_approver_id" readonly="1"/>
+                            <field name="approver_id" invisible="state not in ('approved', 'paid')"/>
+                            <field name="approval_date" invisible="state not in ('approved', 'paid')"/>
+                            <field name="payment_id" invisible="not payment_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Concepto" name="concept">
+                            <field name="concept" placeholder="Indique el concepto y detalle del pago solicitado..."
+                                   readonly="state != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="payment_request_view_search" model="ir.ui.view">
+        <field name="name">payment.request.search</field>
+        <field name="model">payment.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="applicant_id"/>
+                <filter name="draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
+                <filter name="sent" string="Enviadas" domain="[('state', '=', 'sent')]"/>
+                <filter name="approved" string="Aprobadas" domain="[('state', '=', 'approved')]"/>
+                <filter name="paid" string="Pagadas" domain="[('state', '=', 'paid')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_partner" string="Proveedor" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_state" string="Estado" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="payment_request_action" model="ir.actions.act_window">
+        <field name="name">Solicitudes de Pago</field>
+        <field name="res_model">payment.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

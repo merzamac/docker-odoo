@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_payment_request_root" name="Pagos a Proveedores" sequence="50"
+              groups="group_payment_request_user"/>
+    <menuitem id="menu_payment_request_main" name="Solicitudes de Pago" parent="menu_payment_request_root"
+              action="payment_request_action" sequence="10"/>
+    <menuitem id="menu_payment_approval_level" name="Niveles de Aprobación" parent="menu_payment_request_root"
+              action="payment_approval_level_action" sequence="20" groups="group_payment_request_treasury"/>
+</odoo>

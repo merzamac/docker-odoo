@@ -1,0 +1,22 @@
+{
+    "name": "Solicitudes de Pago con Aprobación",
+    "version": "18.0.1.0.0",
+    "category": "Accounting/Accounting",
+    "summary": "Gestión, aprobación por niveles y pago multi-moneda de solicitudes a proveedores",
+    "author": "Binaural",
+    "license": "LGPL-3",
+    "depends": ["account", "mail"],
+    "data": [
+        "security/payment_request_security.xml",
+        "security/ir.model.access.csv",
+        "data/ir_sequence_data.xml",
+        "views/payment_approval_level_views.xml",
+        "views/payment_request_views.xml",
+        "wizard/payment_request_reject_wizard_views.xml",
+        "wizard/payment_request_pay_wizard_views.xml",
+        "views/payment_request_menus.xml",
+        "report/payment_request_report.xml",
+    ],
+    "installable": True,
+    "application": True,
+}
