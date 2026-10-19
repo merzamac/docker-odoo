@@ -248,6 +248,9 @@ class TestPaymentRequest(TransactionCase):
         self.assertEqual(req.state, "rejected")
         bodies = req.message_ids.mapped("body")
         self.assertTrue(any("Falta presupuesto" in body for body in bodies))
+        # Odoo 18 escapa los cuerpos str en message_post: con Markup la etiqueta debe quedar real
+        reject_body = next(body for body in bodies if "Falta presupuesto" in body)
+        self.assertIn("<b>", reject_body)
 
     def test_09_pdf_muestra_quien_aprobo_y_cuando(self):
         """Tramo B: el PDF muestra quién aprobó y cuándo."""
@@ -273,6 +276,11 @@ class TestPaymentRequest(TransactionCase):
         pay_wiz.action_confirm_payment()
         self.assertEqual(req.state, "paid")
         self.assertTrue(req.payment_id)
+        # Odoo 18 escapa los cuerpos str en message_post: con Markup el enlace debe quedar real
+        payment_body = next(
+            body for body in req.message_ids.mapped("body") if "Pago contable registrado" in body
+        )
+        self.assertIn("<a href", payment_body)
 
         pay_wiz_dup = self.env["payment.request.pay.wizard"].create({
             "request_id": req.id,
