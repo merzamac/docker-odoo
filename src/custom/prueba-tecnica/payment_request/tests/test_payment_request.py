@@ -53,6 +53,8 @@ class TestPaymentRequest(TransactionCase):
         })
         cls.usd_currency = cls.env.ref("base.USD")
         cls.ves_currency = cls.env.ref("base.VES")
+        # VES viene inactiva en BDs sin demo: contabilizar con ella exige moneda activa
+        cls.ves_currency.active = True
 
         # Nivel de Aprobación: >= $1000 asigna al aprobador
         cls.env["payment.approval.level"].create({
@@ -65,8 +67,8 @@ class TestPaymentRequest(TransactionCase):
 
         # Tasas VES: ene-2026 1 USD = 10 Bs; jun-2026 1 USD = 20 Bs
         cls.env["res.currency.rate"].create([
-            {"currency_id": cls.ves_currency.id, "rate": 10.0, "date": "2026-01-01"},
-            {"currency_id": cls.ves_currency.id, "rate": 20.0, "date": "2026-06-01"},
+            {"currency_id": cls.ves_currency.id, "rate": 10.0, "name": "2026-01-01"},
+            {"currency_id": cls.ves_currency.id, "rate": 20.0, "name": "2026-06-01"},
         ])
         cls.journal_ves = cls.env["account.journal"].create({
             "name": "Banco VES Test",
@@ -83,7 +85,8 @@ class TestPaymentRequest(TransactionCase):
         company = cls.env.company
         cls.payable_account = cls.env["account.account"].search([
             ("account_type", "=", "liability_payable"),
-            ("company_id", "=", company.id),
+            # Odoo 18: account.account filtro por company_ids (company_id ya no existe)
+            ("company_ids", "in", [company.id]),
         ], limit=1)
         if not cls.payable_account:
             cls.payable_account = cls.env["account.account"].create({
@@ -93,7 +96,7 @@ class TestPaymentRequest(TransactionCase):
             })
         cls.outstanding_account = cls.env["account.account"].search([
             ("account_type", "=", "asset_cash"),
-            ("company_id", "=", company.id),
+            ("company_ids", "in", [company.id]),
         ], limit=1)
         if not cls.outstanding_account:
             cls.outstanding_account = cls.env["account.account"].create({
